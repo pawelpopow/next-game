@@ -91,7 +91,7 @@ class Board(object):
 
                 self.draw_text(self.surface, marker, (center_x, center_y))
 
-    def draw_text(self, surface,  text, center, color=(180, 180, 180)):
+    def draw_text(self, surface, text, center, color=(180, 180, 180)):
         """
         Rysuje wskazany tekst we wskazanym miejscu
         """
@@ -173,6 +173,7 @@ class Ai(object):
     """
     Kieruje ruchami komputera na podstawie analizy położenia znaczników
     """
+
     def __init__(self, board):
         self.board = board
 
@@ -283,7 +284,7 @@ def check_win(markers, x_player):
 
     # sprawdzamy przekątne
     diagonal1 = [marker(i, i) for i in seq]
-    diagonal2 = [marker(i, abs(i-2)) for i in seq]
+    diagonal2 = [marker(i, abs(i - 2)) for i in seq]
     if diagonal1 == win or diagonal2 == win:
         return True
 
@@ -293,4 +294,5 @@ def check_win(markers, x_player):
 
 
 if __name__ == '__main__':
-    pass
+    game = TicTacToeGame(300)
+    game.run()
