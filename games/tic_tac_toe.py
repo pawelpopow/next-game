@@ -14,14 +14,14 @@ logging.getLogger().setLevel(logging.INFO)
 
 class Board(object):
     """
-        Plansza do gry. Odpowiada za rysowanie okna gry.
+    Plansza do gry. Odpowiada za rysowanie okna gry.
     """
 
     def __init__(self, width):
         """
-            Konstruktor planszy do gry. Przygotowuje okienko gry.
+        Konstruktor planszy do gry. Przygotowuje okienko gry.
 
-            :param width: szerokość w pikselach
+        :param width: szerokość w pikselach
         """
         self.surface = pygame.display.set_mode((width, width), 0, 32)
         pygame.display.set_caption('Tic-tac-toe')
@@ -34,13 +34,12 @@ class Board(object):
         # tablica znaczników 3x3 w formie listy
         self.markers = [None] * 9
 
-    def draw_net(self):
+    def draw(self, *args):
         """
-            Rysuje okno gry
+        Rysuje okno gry
 
-            :param args: lista obiektów do narysowania
+        :param args: lista obiektów do narysowania
         """
-
         background = (0, 0, 0)
         self.surface.fill(background)
         self.draw_net()
@@ -55,12 +54,12 @@ class Board(object):
 
     def draw_net(self):
         """
-            Rysuje siatkę linii na planszy
+        Rysuje siatkę linii na planszy
         """
         color = (255, 255, 255)
         width = self.surface.get_width()
         for i in range(1, 3):
-            pos = width / 3 * 1
+            pos = width / 3 * i
             # linia pozioma
             pygame.draw.line(self.surface, color, (0, pos), (width, pos), 1)
             # linia pionowa
@@ -68,7 +67,7 @@ class Board(object):
 
     def player_move(self, x, y):
         """
-            Ustawia na planszy znacznik gracza X na podstawie współrzędnych w pikselach
+        Ustawia na planszy znacznik gracza X na podstawie współrzędnych w pikselach
         """
         cell_size = self.surface.get_width() / 3
         x /= cell_size
@@ -77,9 +76,8 @@ class Board(object):
 
     def draw_markers(self):
         """
-            Rysuje znaczniki graczy
+        Rysuje znaczniki graczy
         """
-
         box_side = self.surface.get_width() / 3
         for x in range(3):
             for y in range(3):
@@ -93,11 +91,10 @@ class Board(object):
 
                 self.draw_text(self.surface, marker, (center_x, center_y))
 
-    def draw_text(self, surface, text, center, color=(180, 180, 180)):
+    def draw_text(self, surface,  text, center, color=(180, 180, 180)):
         """
-            Rysuje wskazany tekst we wskazanym miejscu
+        Rysuje wskazany tekst we wskazanym miejscu
         """
-
         text = self.font.render(text, True, color)
         rect = text.get_rect()
         rect.center = center
@@ -105,7 +102,7 @@ class Board(object):
 
     def draw_score(self):
         """
-            Sprawdza czy gra została skończona i rysuje właściwy komunikat
+        Sprawdza czy gra została skończona i rysuje właściwy komunikat
         """
         if check_win(self.markers, True):
             score = u"Wygrałeś(aś)"
@@ -122,13 +119,13 @@ class Board(object):
 
 class TicTacToeGame(object):
     """
-        Łączy wszystkie elementy gry w całość.
+    Łączy wszystkie elementy gry w całość.
     """
 
     def __init__(self, width, ai_turn=False):
         """
-            Przygotowanie ustawień gry
-            :param width: szerokość planszy mierzona w pikselach
+        Przygotowanie ustawień gry
+        :param width: szerokość planszy mierzona w pikselach
         """
         pygame.init()
         # zegar którego użyjemy do kontrolowania szybkości rysowania
@@ -141,7 +138,7 @@ class TicTacToeGame(object):
 
     def run(self):
         """
-            Główna pętla gry
+        Główna pętla gry
         """
         while not self.handle_events():
             # działaj w pętli do momentu otrzymania sygnału do wyjścia
@@ -153,9 +150,9 @@ class TicTacToeGame(object):
 
     def handle_events(self):
         """
-            Obsługa zdarzeń systemowych, tutaj zinterpretujemy np. ruchy myszką
+        Obsługa zdarzeń systemowych, tutaj zinterpretujemy np. ruchy myszką
 
-            :return True jeżeli pygame przekazał zdarzenie wyjścia z gry
+        :return True jeżeli pygame przekazał zdarzenie wyjścia z gry
         """
         for event in pygame.event.get():
             if event.type == pygame.locals.QUIT:
@@ -167,9 +164,85 @@ class TicTacToeGame(object):
                     # jeśli jeszcze trwa ruch komputera to ignorujemy zdarzenia
                     continue
                 # pobierz aktualną pozycję kursora na planszy mierzoną w pikselach
-            x, y = pygame.mouse.get_pos()
-            self.board.player_move()
-            self.ai_turn = True
+                x, y = pygame.mouse.get_pos()
+                self.board.player_move(x, y)
+                self.ai_turn = True
+
+
+class Ai(object):
+    """
+    Kieruje ruchami komputera na podstawie analizy położenia znaczników
+    """
+    def __init__(self, board):
+        self.board = board
+
+    def make_turn(self):
+        """
+        Wykonuje ruch komputera
+        """
+        if not None in self.board.markers:
+            # brak dostępnych ruchów
+            return
+        logging.debug("Plansza: %s" % self.board.markers)
+        move = self.next_move(self.board.markers)
+        self.board.markers[move] = player_marker(False)
+
+    @classmethod
+    def next_move(cls, markers):
+        """
+        Wybierz następny ruch komputera na podstawie wskazanej planszy
+        :param markers: plansza gry
+        :return: index tablicy jednowymiarowe w której należy ustawić znacznik kółka
+        """
+        # pobierz dostępne ruchy wraz z oceną
+        moves = cls.score_moves(markers, False)
+        # wybierz najlepiej oceniony ruch
+        score, move = max(moves, key=lambda m: m[0])
+        logging.info("Dostępne ruchy: %s", moves)
+        logging.info("Wybrany ruch: %s %s", move, score)
+        return move
+
+    @classmethod
+    def score_moves(cls, markers, x_player):
+        """
+        Ocenia rekurencyjne możliwe ruchy
+
+        Jeśli ruch jest zwycięstwem otrzymuje +1, jeśli przegraną -1
+        lub 0 jeśli nie nie ma zwycięscy. Dla ruchów bez zwycięscy rekreacyjnie
+        analizowane są kolejne ruchy a suma ich punktów jest wynikiem aktualnego
+        ruchu.
+
+        :param markers: plansza na podstawie której analizowane są następne ruchy
+        :param x_player: True jeśli ruch dotyczy gracza X, False dla gracza O
+        """
+        # wybieramy wszystkie możliwe ruchy na podstawie wolnych pól
+        available_moves = (i for i, m in enumerate(markers) if m is None)
+        for move in available_moves:
+            from copy import copy
+            # tworzymy kopię planszy która na której testowo zostanie
+            # wykonany ruch w celu jego późniejszej oceny
+            proposal = copy(markers)
+            proposal[move] = player_marker(x_player)
+
+            # sprawdzamy czy ktoś wygrywa gracz którego ruch testujemy
+            if check_win(proposal, x_player):
+                # dodajemy punkty jeśli to my wygrywamy
+                # czyli nie x_player
+                score = -1 if x_player else 1
+                yield score, move
+                continue
+
+            # ruch jest neutralny,
+            # sprawdzamy rekurencyjne kolejne ruchy zmieniając gracza
+            next_moves = list(cls.score_moves(proposal, not x_player))
+            if not next_moves:
+                yield 0, move
+                continue
+
+            # rozdzielamy wyniki od ruchów
+            scores, moves = zip(*next_moves)
+            # sumujemy wyniki możliwych ruchów, to będzie nasz wynik
+            yield sum(scores), move
 
 
 if __name__ == '__main__':
