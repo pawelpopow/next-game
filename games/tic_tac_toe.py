@@ -245,5 +245,52 @@ class Ai(object):
             yield sum(scores), move
 
 
+def player_marker(x_player):
+    """
+    Funkcja pomocnicza zwracająca znaczniki graczy
+    :param x_player: True dla gracza X False dla gracza O
+    :return: odpowiedni znak gracza
+    """
+    return "X" if x_player else "O"
+
+
+def check_win(markers, x_player):
+    """
+    Sprawdza czy przekazany zestaw znaczników gry oznacza zwycięstwo wskazanego gracza
+
+    :param markers: jednowymiarowa sekwencja znaczników w
+    :param x_player: True dla gracza X False dla gracza O
+    """
+    win = [player_marker(x_player)] * 3
+    seq = range(3)
+
+    # definiujemy funkcję pomocniczą pobierającą znacznik
+    # na podstawie współrzędnych x i y
+    def marker(xx, yy):
+        return markers[xx + yy * 3]
+
+    # sprawdzamy każdy rząd
+    for x in seq:
+        row = [marker(x, y) for y in seq]
+        if row == win:
+            return True
+
+    # sprawdzamy każdą kolumnę
+    for y in seq:
+        col = [marker(x, y) for x in seq]
+        if col == win:
+            return True
+
+    # sprawdzamy przekątne
+    diagonal1 = [marker(i, i) for i in seq]
+    diagonal2 = [marker(i, abs(i-2)) for i in seq]
+    if diagonal1 == win or diagonal2 == win:
+        return True
+
+
+# Ta część powinna być zawsze na końcu modułu (ten plik jest modułem)
+# chcemy uruchomić naszą grę dopiero po tym jak wszystkie klasy zostaną zadeklarowane
+
+
 if __name__ == '__main__':
     pass
